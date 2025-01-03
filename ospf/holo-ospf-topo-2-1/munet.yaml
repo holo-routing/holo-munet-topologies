@@ -1,0 +1,134 @@
+#
+#                         +---------+
+#                         |         |
+#                         |   RT1   |
+#                         | 1.1.1.1 |
+#                         |         |
+#                         +---------+
+#                              |eth-sw1
+#                              |
+#                              |
+#                              |
+#         +---------+          |          +---------+
+#         |         |          |          |         |
+#         |   RT2   |eth-sw1   |   eth-sw1|   RT3   |
+#         | 2.2.2.2 +----------+----------+ 3.3.3.3 |
+#         |         |     10.0.1.0/24     |         |
+#         +---------+                     +---------+
+#    eth-rt4-1|  |eth-rt4-2          eth-rt5-1|  |eth-rt5-2
+#             |  |                            |  |
+#  10.0.2.0/24|  |10.0.3.0/24      10.0.4.0/24|  |10.0.5.0/24
+#             |  |                            |  |
+#    eth-rt2-1|  |eth-rt2-2          eth-rt3-1|  |eth-rt3-2
+#         +---------+                     +---------+
+#         |         |                     |         |
+#         |   RT4   |     10.0.6.0/24     |   RT5   |
+#         | 4.4.4.4 +---------------------+ 5.5.5.5 |
+#         |         |eth-rt5       eth-rt4|         |
+#         +---------+                     +---------+
+#       eth-rt6|                                |eth-rt6
+#              |                                |
+#   10.0.7.0/24|                                |10.0.8.0/24
+#              |          +---------+           |
+#              |          |         |           |
+#              |          |   RT6   |           |
+#              +----------+ 6.6.6.6 +-----------+
+#                  eth-rt4|         |eth-rt5
+#                         +---------+
+#
+
+---
+
+version: 1
+kinds:
+  - name : holo
+    cmd: |
+      mkdir /etc/holod
+      chown holo:holo -R /var/run/holo/
+    volumes:
+      - "./%NAME%/etc.holo:/etc/holo/"
+
+topology:
+  networks-autonumber: true
+  networks: 
+    - name: net1
+      ip: 10.0.1.0/24
+    - name: net2
+      ip: 10.0.2.0/24
+    - name: net3
+      ip: 10.0.3.0/24
+    - name: net4
+      ip: 10.0.4.0/24
+    - name: net5
+      ip: 10.0.5.0/24
+    - name: net6
+      ip: 10.0.6.0/24
+    - name: net7
+      ip: 10.0.7.0/24
+    - name: net8
+      ip: 10.0.8.0/24
+  nodes:
+    - name: rt1
+      kind: holo
+      connections:
+        - to: net1
+          name: "eth-sw1"
+          ip: 10.0.1.1/24
+    - name: rt2
+      connections:
+        - to: net1
+          name: "eth-sw1"
+          ip: 10.0.1.2/24
+        - to: net2
+          name: "eth-rt4-1"
+          ip: 10.0.2.2/24
+        - to: net3
+          name: "eth-rt4-2"
+          ip: 10.0.3.2/24
+    - name: rt3
+      connections:
+        - to: net1
+          name: "eth-sw1"
+          ip: 10.0.1.3/24
+        - to: net4
+          name: "eth-rt5-1"
+          ip: 10.0.4.3/24
+        - to: net5
+          name: "eth-rt5-2"
+          ip: 10.0.5.3/24
+    - name: rt4
+      connections:
+        - to: net2
+          name: "eth-rt2-1"
+          ip: 10.0.2.4/24
+        - to: net3
+          name: "eth-rt2-2"
+          ip: 10.0.3.4/24
+        - to: net6
+          name: "eth-rt5"
+          ip: 10.0.6.4/24
+        - to: net7
+          name: "eth-rt6"
+          ip: 10.0.7.4/24
+    - name: rt5
+      connections:
+        - to: net4
+          name: "eth-rt3-1"
+          ip: 10.0.4.5/24
+        - to: net5
+          name: "eth-rt3-2"
+          ip: 10.0.5.5/24
+        - to: net6
+          name: "eth-rt4"
+          ip: 10.0.6.5/24
+        - to: net8
+          name: "eth-rt6"
+          ip: 10.0.8.5/24
+    - name: rt6
+      connections:
+        - to: net7
+          name: "eth-rt4"
+          ip: 10.0.7.6/24
+        - to: net5
+          name: "eth-rt5"
+          ip: 10.0.8.6/24
