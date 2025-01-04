@@ -122,7 +122,7 @@ topology:
       connections:
         - to: net7
           name: "eth-rt4"
-        - to: net5
+        - to: net8
           name: "eth-rt5"
 cli:
   commands:
