@@ -3,9 +3,10 @@ Topologies for developing holo routing with munet
 
 
 ### PATH
-expects a path for your holod and holi cli builds locally to use in namespaces
+Munet expects `holod` and `holo-cli` to be available so making a symlink to your build objects is recommended.
 ```
-HOLO_BUILD_DIR="/path/to/build/directory/holod"
+ln -s ~/.cargo/bin/holod /usr/sbin/holod
+ln -s ~/.cargo/bin/holo-cli /usr/sbin/holo-cli
 ```
 
 
@@ -16,6 +17,17 @@ sudo -E munet -c ospf/holo-ospf-topo-2-1/munet.yaml
 term rt1
  ```
 
-# todo
-- run holod in each router
-- write logging for each router to predicatable dir
+Open a holo-cli for a given router with
+```
+munet> holo-cli rt1
+```
+
+logs for each one of your routers can be examined with
+```
+cat /tmp/munet/rt1/var.log/holod.log
+```
+
+additionaly you can create a symlink in your dev envionment for quick access.
+```
+ln -s /tmp/munet/rt1/var.log/holod.log ~/dev/env/holo/logs/rt1.log
+```

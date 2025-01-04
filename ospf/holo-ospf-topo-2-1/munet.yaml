@@ -43,12 +43,16 @@ version: 1
 kinds:
   - name : holo
     cmd: |
-      mkdir /etc/holod
-      chown holo:holo -R /var/run/holo/
+      chown holo:holo -R /var/run/holo
+      holod &
+      while ! holo-cli --file /etc/holo/holo.config; do sleep 1; done
+      sysctl -wq net.ipv6.conf.all.forwarding=1
     volumes:
       - "./%NAME%/etc.holo:/etc/holo/"
-
+      - "%RUNDIR%/var.log:/var/log"
+      - "%RUNDIR%/var.run.holo:/var/run/holo"
 topology:
+  ipv6-enable: true
   networks-autonumber: true
   networks: 
     - name: net1
@@ -75,6 +79,7 @@ topology:
           name: "eth-sw1"
           ip: 10.0.1.1/24
     - name: rt2
+      kind: holo
       connections:
         - to: net1
           name: "eth-sw1"
@@ -86,6 +91,7 @@ topology:
           name: "eth-rt4-2"
           ip: 10.0.3.2/24
     - name: rt3
+      kind: holo
       connections:
         - to: net1
           name: "eth-sw1"
@@ -97,6 +103,7 @@ topology:
           name: "eth-rt5-2"
           ip: 10.0.5.3/24
     - name: rt4
+      kind: holo
       connections:
         - to: net2
           name: "eth-rt2-1"
@@ -111,6 +118,7 @@ topology:
           name: "eth-rt6"
           ip: 10.0.7.4/24
     - name: rt5
+      kind: holo
       connections:
         - to: net4
           name: "eth-rt3-1"
@@ -125,6 +133,7 @@ topology:
           name: "eth-rt6"
           ip: 10.0.8.5/24
     - name: rt6
+      kind: holo
       connections:
         - to: net7
           name: "eth-rt4"
@@ -132,3 +141,10 @@ topology:
         - to: net5
           name: "eth-rt5"
           ip: 10.0.8.6/24
+cli:
+  commands:
+    - name: "holo-cli"
+      exec: holo-cli
+      format: "holo-cli ROUTER [ROUTER ...]"
+      new-window: true
+      kinds: ["holo"]
