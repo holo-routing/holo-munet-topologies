@@ -16,10 +16,11 @@ git clone https://github.com/holo-routing/holo-munet-topologies/
 cd holo-munet-topologies
 ```
 
-Install munet:
+Activate the virtual environment and install munet:
 ```sh
 python3 -m venv venv
 source venv/bin/activate
+pip install munet
 ```
 
 ### Running a topology
@@ -34,6 +35,11 @@ sudo -E munet -c ospf/holo-ospf-topo-2-1/munet.yaml
 You should be inside munet's CLI. Open a holo-cli for a given router with
 ```
 munet> holo-cli rt1
+```
+
+To access the router's Terminal(not the `holo` terminal), we use:
+```
+munet> term rt1
 ```
 
 logs for each one of your routers can be examined with
