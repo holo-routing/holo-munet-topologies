@@ -35,6 +35,30 @@ kinds:
       holod &
       while ! holo-cli --file /etc/holo/holo.config; do sleep 1; done
 
+      collect_network_snapshot() {
+          local snapshot_dir=$1
+          local sleep_duration=$2
+          local events_file=$3
+          nodename=${MUNET_NODENAME}
+
+          # Wait for initial network convergence.
+          sleep "${sleep_duration}"
+
+          # Ensure snapshot directory exists.
+          mkdir -p "${snapshot_dir}/${nodename}"
+
+          # Collect running configuration in JSON format.
+          holo-cli -c "show running format json" > "${snapshot_dir}/${nodename}/config.json"
+
+          # Collect protocol events.
+          cp "/tmp/munet/${nodename}/var.run.holo/${events_file}" "${snapshot_dir}/${nodename}/events.jsonl"
+          sed -i '/"Northbound":/d' "${snapshot_dir}/${nodename}/events.jsonl"
+      }
+
+      if [[ -n "${SNAPSHOT_DIR}" ]]; then
+          collect_network_snapshot "${SNAPSHOT_DIR}" 10 "holo-events-vrrp-eth-sw1.jsonl"
+      fi
+
     volumes:
       - "./%NAME%/etc.holo:/etc/holo/"
       - "%RUNDIR%/var.log:/var/log"
