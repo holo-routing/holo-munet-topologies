@@ -36,7 +36,9 @@
 #                  eth-rt4|         |eth-rt5
 #                         +---------+
 #
-# L2: rt1, rt2, rt3, rt4, rt5, rt6
+# L2: rt1, rt2, rt3
+# L1/L2: rt4, rt5
+# L1: rt6
 #
 # The interfaces connected to the sw1 LAN are configured in the broadcast mode.
 # All other interfaces are configured in the point-to-point mode.
