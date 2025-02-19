@@ -46,11 +46,11 @@ kinds:
       chown holo:holo -R /var/run/holo
       holod &
       while ! holo-cli --file /etc/holo/holo.config; do sleep 1; done
-      sysctl -wq net.ipv6.conf.all.forwarding=1
     volumes:
       - "./%NAME%/etc.holo:/etc/holo/"
       - "%RUNDIR%/var.log:/var/log"
       - "%RUNDIR%/var.run.holo:/var/run/holo"
+
 topology:
   ipv6-enable: true
   networks-autonumber: true
