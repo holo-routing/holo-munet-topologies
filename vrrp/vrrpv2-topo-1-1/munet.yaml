@@ -31,38 +31,19 @@ version: 1
 kinds:
   - name : holo
     cmd: |
-      chown holo:holo -R /var/run/holo
-      holod &
-      while ! holo-cli --file /etc/holo/holo.config; do sleep 1; done
+      protocol_name=holo-vrrp
+      topology_name=vrrpv2-topo-1-1
+      sleep_time=10 # Number of seconds before proper state of network is achieved.
+      events_file=holo-events-vrrp-eth-sw1.jsonl
 
-      collect_network_snapshot() {
-          local snapshot_dir=$1
-          local sleep_duration=$2
-          local events_file=$3
-          nodename=${MUNET_NODENAME}
-
-          # Wait for initial network convergence.
-          sleep "${sleep_duration}"
-
-          # Ensure snapshot directory exists.
-          mkdir -p "${snapshot_dir}/${nodename}"
-
-          # Collect running configuration in JSON format.
-          holo-cli -c "show running format json" > "${snapshot_dir}/${nodename}/config.json"
-
-          # Collect protocol events.
-          cp "/tmp/munet/${nodename}/var.run.holo/${events_file}" "${snapshot_dir}/${nodename}/events.jsonl"
-          sed -i '/"Northbound":/d' "${snapshot_dir}/${nodename}/events.jsonl"
-      }
-
-      if [[ -n "${SNAPSHOT_DIR}" ]]; then
-          collect_network_snapshot "${SNAPSHOT_DIR}" 10 "holo-events-vrrp-eth-sw1.jsonl"
-      fi
+      cd /tmp/munet/${MUNET_NODENAME}/holo.setup
+      ./setup.sh ${protocol_name} ${topology_name} ${sleep_time} ${events_file}
 
     volumes:
       - "./%NAME%/etc.holo:/etc/holo/"
       - "%RUNDIR%/var.log:/var/log"
       - "%RUNDIR%/var.run.holo:/var/run/holo"
+      - "%CONFIGDIR%/../../setup:%RUNDIR%/holo.setup"
 
 topology:
   ipv6-enable: true
