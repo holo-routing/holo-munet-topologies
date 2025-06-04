@@ -43,13 +43,19 @@ version: 1
 kinds:
   - name : holo
     cmd: |
-      chown holo:holo -R /var/run/holo
-      holod &
-      while ! holo-cli --file /etc/holo/holo.config; do sleep 1; done
+      protocol_name=holo-ospf
+      topology_name=topo-2-1
+      version=ospfv2
+      sleep_time=60 # Number of seconds before convergence is achieved
+      events_file=holo-events-ospfv2-main.jsonl
+      cd /tmp/munet/${MUNET_NODENAME}/holo.setup
+      ./setup.sh ${protocol_name} ${topology_name} ${sleep_time} ${events_file} ${version}
+
     volumes:
       - "./%NAME%/etc.holo:/etc/holo/"
       - "%RUNDIR%/var.log:/var/log"
       - "%RUNDIR%/var.run.holo:/var/run/holo"
+      - "%CONFIGDIR%/../../setup:%RUNDIR%/holo.setup"
 
 topology:
   ipv6-enable: true

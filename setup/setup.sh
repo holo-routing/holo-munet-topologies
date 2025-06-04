@@ -4,6 +4,7 @@ protocolname=$1
 topologyname=$2
 sleeptime=$3
 eventsfile=$4
+version=$5
 
 source /tmp/munet/${MUNET_NODENAME}/holo.setup/env.txt
 chown holo:holo -R /var/run/holo
@@ -33,6 +34,11 @@ collect_network_snapshot() {
 }
 
 if [[ -n "${SNAPSHOT_DIR}" ]]; then
-  export SNAPSHOT_DIR=${SNAPSHOT_DIR}/${protocolname}/tests/conformance/topologies/
-  collect_network_snapshot "${SNAPSHOT_DIR}" "${sleeptime}" "${eventsfile}" "${topologyname}"
+  if [[ -n "${version}" ]]; then
+    export SNAPSHOT_DIR=${SNAPSHOT_DIR}/${protocolname}/tests/conformance/${version}/topologies/
+    collect_network_snapshot "${SNAPSHOT_DIR}" "${sleeptime}" "${eventsfile}" "${topologyname}"
+  else
+    export SNAPSHOT_DIR=${SNAPSHOT_DIR}/${protocolname}/tests/conformance/topologies/
+    collect_network_snapshot "${SNAPSHOT_DIR}" "${sleeptime}" "${eventsfile}" "${topologyname}"
+  fi
 fi
