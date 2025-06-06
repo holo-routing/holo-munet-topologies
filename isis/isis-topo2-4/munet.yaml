@@ -1,0 +1,146 @@
+#
+#                         +---------+
+#                         |         |
+#                         |   RT1   |
+#                         | 1.1.1.1 |
+#                         |         |
+#                         +---------+
+#                              |eth-sw1
+#                              |
+#                              |
+#                              |
+#         +---------+          |          +---------+
+#         |         |          |          |         |
+#         |   RT2   |eth-sw1   |   eth-sw1|   RT3   |
+#         | 2.2.2.2 +----------+----------+ 3.3.3.3 |
+#         |         |     10.0.1.0/24     |         |
+#         +---------+                     +---------+
+#    eth-rt4-1|  |eth-rt4-2          eth-rt5-1|  |eth-rt5-2
+#             |  |                            |  |
+#  10.0.2.0/24|  |10.0.3.0/24      10.0.4.0/24|  |10.0.5.0/24
+#             |  |                            |  |
+#    eth-rt2-1|  |eth-rt2-2          eth-rt3-1|  |eth-rt3-2
+#         +---------+                     +---------+
+#         |         |                     |         |
+#         |   RT4   |     10.0.6.0/24     |   RT5   |
+#         | 4.4.4.4 +---------------------+ 5.5.5.5 |
+#         |         |eth-rt5       eth-rt4|         |
+#         +---------+                     +---------+
+#       eth-rt6|                                |eth-rt6
+#              |                                |
+#   10.0.7.0/24|                                |10.0.8.0/24
+#              |          +---------+           |
+#              |          |         |           |
+#              |          |   RT6   |           |
+#              +----------+ 6.6.6.6 +-----------+
+#                  eth-rt4|         |eth-rt5
+#                         +---------+
+#
+# L2: rt1, rt2, rt3
+# L1/L2: rt4, rt5
+# L1: rt6
+#
+# The interfaces connected to the sw1 LAN are configured in the broadcast mode.
+# All other interfaces are configured in the point-to-point mode.
+#
+
+---
+
+version: 1
+kinds:
+  - name : holo
+    cmd: |
+      protocol_name=holo-isis
+      topology_name=topo2-4
+      sleep_time=60
+      events_file=holo-events-isis-main.jsonl
+      cd /tmp/munet/${MUNET_NODENAME}/holo.setup
+      ./setup.sh ${protocol_name} ${topology_name} ${sleep_time} ${events_file}
+
+    volumes:
+      - "./%NAME%/etc.holo:/etc/holo/"
+      - "%RUNDIR%/var.log:/var/log"
+      - "%RUNDIR%/var.run.holo:/var/run/holo"
+      - "%CONFIGDIR%/../../setup:%RUNDIR%/holo.setup"
+
+topology:
+  ipv6-enable: true
+  networks-autonumber: true
+  networks:
+    - name: net1
+      ip: 10.0.1.0/24
+    - name: net2
+      ip: 10.0.2.0/24
+    - name: net3
+      ip: 10.0.3.0/24
+    - name: net4
+      ip: 10.0.4.0/24
+    - name: net5
+      ip: 10.0.5.0/24
+    - name: net6
+      ip: 10.0.6.0/24
+    - name: net7
+      ip: 10.0.7.0/24
+    - name: net8
+      ip: 10.0.8.0/24
+  nodes:
+    - name: rt1
+      kind: holo
+      connections:
+        - to: net1
+          name: "eth-sw1"
+    - name: rt2
+      kind: holo
+      connections:
+        - to: net1
+          name: "eth-sw1"
+        - to: net2
+          name: "eth-rt4-1"
+        - to: net3
+          name: "eth-rt4-2"
+    - name: rt3
+      kind: holo
+      connections:
+        - to: net1
+          name: "eth-sw1"
+        - to: net4
+          name: "eth-rt5-1"
+        - to: net5
+          name: "eth-rt5-2"
+    - name: rt4
+      kind: holo
+      connections:
+        - to: net2
+          name: "eth-rt2-1"
+        - to: net3
+          name: "eth-rt2-2"
+        - to: net6
+          name: "eth-rt5"
+        - to: net7
+          name: "eth-rt6"
+    - name: rt5
+      kind: holo
+      connections:
+        - to: net4
+          name: "eth-rt3-1"
+        - to: net5
+          name: "eth-rt3-2"
+        - to: net6
+          name: "eth-rt4"
+        - to: net8
+          name: "eth-rt6"
+    - name: rt6
+      kind: holo
+      connections:
+        - to: net7
+          name: "eth-rt4"
+        - to: net8
+          name: "eth-rt5"
+
+cli:
+  commands:
+    - name: "holo-cli"
+      exec: holo-cli
+      format: "holo-cli ROUTER [ROUTER ...]"
+      new-window: true
+      kinds: ["holo"]
