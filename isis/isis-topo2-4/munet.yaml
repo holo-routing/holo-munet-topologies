@@ -60,7 +60,7 @@ kinds:
     volumes:
       - "./%NAME%/etc.holo:/etc/holo/"
       - "%RUNDIR%/var.log:/var/log"
-      - "%RUNDIR%/var.run.holo:/var/run/holo"
+      - "%RUNDIR%/var.opt.holo:/var/opt/holo"
       - "%CONFIGDIR%/../../setup:%RUNDIR%/holo.setup"
 
 topology:
