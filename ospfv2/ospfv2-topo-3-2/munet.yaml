@@ -1,0 +1,132 @@
+#                 +---------+
+#                 |         |
+#                 |   RT1   |
+#                 | 1.1.1.1 |
+#                 |         |
+#                 +----+----+
+#                      |
+#                      |10.0.1.0/24
+#                      |
+#                 +----+----+
+#                 |         |
+#     10.0.2.0/24 |   RT2   | 10.0.3.0/24
+#       +---------+ 2.2.2.2 +---------+
+#       |         |         |         |
+#       |         +---------+         |
+#       |                             |
+#  +----+----+                   +----+----+
+#  |         |                   |         |
+#  |   RT3   |                   |   RT4   |
+#  | 3.3.3.3 |                   | 4.4.4.4 |
+#  |         |                   |         |
+#  +----+----+                   +----+----+
+#       |                             |
+#       |         +---------+         |
+#       |         |         |         |
+#       |         |   RT5   |         |
+#       +---------+ 5.5.5.5 +---------+
+#     10.0.4.0/24 |         | 10.0.5.0/24
+#                 +----+----+
+#                      |
+#                      |10.0.6.0/24
+#                      |
+#                 +----+----+
+#                 |         |
+#                 |   RT6   |
+#                 | 6.6.6.6 |
+#                 |         |
+#                 +---------+
+#
+# Area 0: rt1, rt2, rt5, rt6
+# Area 1: rt2, rt3, rt4, rt5
+#
+# A virtual link is configured between rt2 and rt5 over area 1.
+#
+# All interfaces are configured in the point-to-point mode.
+
+---
+
+version: 1
+kinds:
+  - name : holo
+    cmd: |
+      protocol_name=holo-ospf
+      topology_name=topo3-2
+      version=ospfv2
+      sleep_time=60 # Number of seconds before convergence is achieved
+      events_file=holo-events-ospfv2-main.jsonl
+      cd /tmp/munet/${MUNET_NODENAME}/holo.setup
+      ./setup.sh ${protocol_name} ${topology_name} ${sleep_time} ${events_file} ${version}
+
+    volumes:
+      - "./%NAME%/etc.holo:/etc/holo/"
+      - "%RUNDIR%/var.log:/var/log"
+      - "%RUNDIR%/var.run.holo:/var/run/holo"
+      - "%CONFIGDIR%/../../setup:%RUNDIR%/holo.setup"
+
+topology:
+  ipv6-enable: true
+  networks-autonumber: true
+  networks:
+    - name: net1
+      ip: 10.0.1.0/24
+    - name: net2
+      ip: 10.0.2.0/24
+    - name: net3
+      ip: 10.0.3.0/24
+    - name: net4
+      ip: 10.0.4.0/24
+    - name: net5
+      ip: 10.0.5.0/24
+    - name: net6
+      ip: 10.0.6.0/24
+  nodes:
+    - name: rt1
+      kind: holo
+      connections:
+        - to: net1
+          name: "eth-rt2"
+    - name: rt2
+      kind: holo
+      connections:
+        - to: net1
+          name: "eth-rt1"
+        - to: net2
+          name: "eth-rt3"
+        - to: net3
+          name: "eth-rt4"
+    - name: rt3
+      kind: holo
+      connections:
+        - to: net2
+          name: "eth-rt2"
+        - to: net4
+          name: "eth-rt5"
+    - name: rt4
+      kind: holo
+      connections:
+        - to: net3
+          name: "eth-rt2"
+        - to: net5
+          name: "eth-rt5"
+    - name: rt5
+      kind: holo
+      connections:
+        - to: net4
+          name: "eth-rt3"
+        - to: net5
+          name: "eth-rt4"
+        - to: net6
+          name: "eth-rt6"
+    - name: rt6
+      kind: holo
+      connections:
+        - to: net6
+          name: "eth-rt5"
+cli:
+  commands:
+    - name: "holo-cli"
+      exec: holo-cli
+      format: "holo-cli ROUTER [ROUTER ...]"
+      new-window: true
+      kinds: ["holo"]
