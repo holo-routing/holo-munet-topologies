@@ -1,0 +1,126 @@
+#                        +---------+          +---------+
+#                        |         |          |         |
+#                    eth1|   RT2   |eth2  eth1|   RT3   |eth2
+#      +-----------------+ 2.2.2.2 +----------+ 3.3.3.3 +----------------+
+#      |                 |         |          |         |                |
+#      |                 +---------+          +---------+                |
+#      |                                                                 |
+#      |                                                                 |
+#      |                                                                 |
+#      |eth1                                                             |eth1
+# +---------+                      +---------+                      +---------+
+# |         |                      |         |                      |         |
+# |   RT1   |eth2              eth1|   RT4   |eth2              eth2|   RT6   |
+# | 1.1.1.1 +----------------------+ 4.4.4.4 +----------------------+ 6.6.6.6 |
+# |         |                      |         |                      |         |
+# +---------+                      +---------+                      +---------+
+#      |eth3                                                             |eth3
+#      |                                                                 |
+#      |                                                                 |
+#      |                                                                 |
+#      |                           +---------+                           |
+#      |                           |         |                           |
+#      |                       eth1|   RT5   |eth2                       |
+#      +---------------------------+ 5.5.5.5 +---------------------------+
+#                                  |         |
+#                                  +---------+
+#
+# All routers are configured for eBGP.
+#
+# By default, RT1 and RT6 use ECMP routing between each other through RT4 and
+# RT5. The top path isn't used since is has a longer AS-path length.
+
+version: 1
+kinds:
+  - name : holo
+    cmd: |
+      protocol_name=holo-bgp
+      topology_name=topo2-1
+      sleep_time=60
+      events_file=holo-events-bgp-main.jsonl
+      cd /tmp/munet/${MUNET_NODENAME}/holo.setup
+      ./setup.sh ${protocol_name} ${topology_name} ${sleep_time} ${events_file}
+
+    volumes:
+      - "./%NAME%/etc.holo:/etc/holo/"
+      - "%RUNDIR%/var.log:/var/log"
+      - "%RUNDIR%/var.opt.holo:/var/opt/holo"
+      - "%CONFIGDIR%/../../setup:%RUNDIR%/holo.setup"
+
+topology:
+  ipv6-enable: true
+  networks:
+    - name: net1
+    - name: net2
+    - name: net3
+    - name: net4
+    - name: net5
+    - name: net6
+    - name: net7
+
+  nodes:
+    - name: rt1
+      kind: holo
+      connections:
+        - to: net1
+          name: "eth1"
+          ip: "10.0.1.1/24"
+        - to: net2
+          name: "eth2"
+          ip: "10.0.2.1/24"
+        - to: net3
+          name: "eth3"
+          ip: "10.0.3.1/24"
+
+    - name: rt2
+      kind: holo
+      connections:
+        - to: net1
+          name: "eth1"
+          ip: "10.0.1.2/24"
+        - to: net4
+          name: "eth2"
+          ip: "10.0.4.2/24"
+
+    - name: rt3
+      kind: holo
+      connections:
+        - to: net4
+          name: "eth1"
+          ip: "10.0.4.3/24"
+        - to: net5
+          name: "eth2"
+          ip: "10.0.5.3/24"
+
+    - name: rt4
+      kind: holo
+      connections:
+        - to: net2
+          name: "eth1"
+          ip: "10.0.2.4/24"
+        - to: net6
+          name: "eth2"
+          ip: "10.0.6.4/24"
+
+    - name: rt5
+      kind: holo
+      connections:
+        - to: net3
+          name: "eth1"
+          ip: "10.0.3.5/24"
+        - to: net7
+          name: "eth2"
+          ip: "10.0.7.5/24"
+
+    - name: rt6
+      kind: holo
+      connections:
+        - to: net5
+          name: "eth1"
+          ip: "10.0.5.6/24"
+        - to: net6
+          name: "eth2"
+          ip: "10.0.6.6/24"
+        - to: net7
+          name: "eth3"
+          ip: "10.0.7.6/24"
