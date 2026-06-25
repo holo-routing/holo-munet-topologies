@@ -1,0 +1,133 @@
+# rt1       rt2       rt3       rt4       rt5       rt6
+#  |         |         |         |         |         |
+#  |--p-c----|         |         |         |         |
+#  |         |---c-p---|         |         |         |
+#  |         |         |--pr-pr--|         |         |
+#  |         |         |         |--c-p----|         |
+#  |         |         |         |         |--p-c----|
+#  [1.1.1.1] [2.2.2.2] [3.3.3.3] [4.4.4.4] [5.5.5.5] [6.6.6.6]
+#
+# Key
+# ---
+# p: provider role
+# c: customer role
+# pr: peer role
+#
+# Expected routes installed in each router via BGP (based on roles):
+# rt1: [rt2 routes]
+# rt2: [rt1 routes, rt3 routes, rt4 routes]
+# rt3: [rt2 routes, rt4 routes]
+# rt4: [rt2 routes, rt3 routes, rt5 routes, rt6 routes]
+# rt5: [rt4 routes, rt6 routes]
+# rt6: [rt4 routes, rt5 routes]
+
+version: 1
+kinds:
+  - name : holo
+    cmd: |
+      protocol_name=holo-bgp
+      topology_name=topo1-3
+      sleep_time=60
+      events_file=holo-events-bgp-main.jsonl
+      cd /tmp/munet/${MUNET_NODENAME}/holo.setup
+      ./setup.sh ${protocol_name} ${topology_name} ${sleep_time} ${events_file}
+
+    volumes:
+      - "./%NAME%/etc.holo:/etc/holo/"
+      - "%RUNDIR%/var.log:/var/log"
+      - "%RUNDIR%/var.opt.holo:/var/opt/holo"
+      - "%CONFIGDIR%/../../setup:%RUNDIR%/holo.setup"
+
+topology:
+  ipv6-enable: true
+  networks:
+    - name: net1
+    - name: net2
+    - name: net3
+    - name: net4
+    - name: net5
+
+    - name: net-test
+
+  nodes:
+    - name: rt1
+      kind: holo
+      connections:
+        - name: "eht-rt2"
+          to: net1
+          ip: 192.168.0.1/30
+
+        - name: "eth-test"
+          to: net-test
+          ip: 10.0.1.1/24
+
+    - name: rt2
+      kind: holo
+      connections:
+        - name: "eth-rt1"
+          to: net1
+          ip: 192.168.0.2/30
+
+        - name: eth-rt3
+          to: net2
+          ip: 192.168.0.5/30
+
+        - name: "eth-test"
+          to: net-test
+          ip: 10.0.2.1/24
+
+    - name: rt3
+      kind: holo
+      connections:
+        - name: eth-rt2
+          to: net2
+          ip: 192.168.0.6/30
+
+        - name: eth-rt4
+          to: net3
+          ip: 192.168.0.9/30
+
+        - name: eth-test
+          to: net-test
+          ip: 10.0.3.1/24
+
+    - name: rt4
+      kind: holo
+      connections:
+        - name: eth-rt3
+          to: net3
+          ip: 192.168.0.10/30
+
+        - name: eth-rt5
+          to: net4
+          ip: 192.168.0.13/30
+
+        - name: eth-test
+          to: net-test
+          ip: 10.0.4.1/24
+
+    - name: rt5
+      kind: holo
+      connections:
+        - name: eth-rt4
+          to: net4
+          ip: 192.168.0.14/30
+
+        - name: eth-rt6
+          to: net5
+          ip: 192.168.0.17/30
+
+        - name: eth-test
+          to: net-test
+          ip: 10.0.5.1/24
+
+    - name: rt6
+      kind: holo
+      connections:
+        - name: eth-rt5
+          to: net5
+          ip: 192.168.0.18/30
+
+        - name: eth-test
+          to: net-test
+          ip: 10.0.6.1/24
