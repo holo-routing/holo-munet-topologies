@@ -51,3 +51,18 @@ additionaly you can create a symlink in your dev envionment for quick access.
 ```
 ln -s /tmp/munet/rt1/var.log/holod.log ~/dev/env/holo/logs/rt1.log
 ```
+
+
+### Conformance tests
+
+[holo](https://github.com/holo-routing/holo) conformance tests can be generated automatically from topologies defined here in munet. Setup specify the path to your local holo codebase in setup/env.txt (create it if it doesn't exist):
+
+```
+SNAPSHOT_DIR=/my/holo/directory
+```
+
+
+#### Generating tests
+
+Each topology defines a `protocol_name` and `topology_name`, which determine the name of the corresponding conformance test directory in your holo repo.
+To generate the tests, start the desired topology. It takes about one minute for convergence, after which the holo directory is automatically updated with the generated conformance test.
